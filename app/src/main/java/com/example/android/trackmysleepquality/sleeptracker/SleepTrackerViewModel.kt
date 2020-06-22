@@ -21,6 +21,7 @@ import android.provider.SyncStateContract.Helpers.insert
 import android.provider.SyncStateContract.Helpers.update
 import android.text.method.TextKeyListener.clear
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
@@ -54,6 +55,15 @@ class SleepTrackerViewModel(
 
     val nightString = Transformations.map(nights){
         nights -> formatNights(nights , application.resources)
+    }
+
+    private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
+
+    val navigateToSleepQuality: LiveData<SleepNight>
+        get() = _navigateToSleepQuality
+
+    fun doneNavigating() {
+    _navigateToSleepQuality.value = null
     }
 
     init {
@@ -94,9 +104,13 @@ class SleepTrackerViewModel(
 
     fun onStopTracking(){
         uiScope.launch {
+            //In kotlin , the return@launch syntax is used for specifying
+            //which function among several nested ones this stmt returns from
+            //In this case, we r specifying to return from launch
             var oldNight = tonight.value ?: return@launch
             oldNight.endTimeMilli = System.currentTimeMillis()
             update(oldNight)
+            _navigateToSleepQuality.value = oldNight
 
         }
     }
